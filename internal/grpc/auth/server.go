@@ -2,8 +2,10 @@ package auth
 
 import (
 	"context"
+	"errors"
 
 	ssov1 "github.com/Touchme245/sso_protos/gen/go/sso"
+	"github.com/Touchme245/sso_server/internal/services/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,6 +31,10 @@ func Register(grpServer *grpc.Server, auth AuthService) {
 func (s *serverApi) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.LoginResponse, error) {
 	err := validateLogin(req)
 	if err != nil {
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid credentials")
+		}
+
 		return nil, err
 	}
 
@@ -48,6 +54,9 @@ func (s *serverApi) Register(ctx context.Context, req *ssov1.RegisterRequest) (*
 	}
 	userId, err := s.authService.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
+		if errors.Is(err, auth.ErrUserExists) {
+			return nil, status.Error(codes.InvalidArgument, "user already exists")
+		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	return &ssov1.RegisterResponse{

@@ -1,0 +1,7 @@
+.PHONY: migrate
+.PHONY: run
+
+migrate:
+    go run ./cmd/migrator/main.go --storage-path=./storage/sso.db --migrations-path=./migrations
+run:
+	go run ./cmd/sso/main.go --config=./config/local.yaml

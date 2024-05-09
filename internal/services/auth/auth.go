@@ -40,7 +40,7 @@ type AppProvider interface {
 	App(ctx context.Context, appId int) (models.App, error)
 }
 
-func NewAuthServuce(log *slog.Logger, userSaver UserSaver, userProvider UserProvider, appProvider AppProvider, tokenTTL time.Duration) *AuthService {
+func NewAuthService(log *slog.Logger, userSaver UserSaver, userProvider UserProvider, appProvider AppProvider, tokenTTL time.Duration) *AuthService {
 	return &AuthService{
 		log:          log,
 		userSaver:    userSaver,

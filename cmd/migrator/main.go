@@ -1,4 +1,4 @@
-package migrator
+package main
 
 import (
 	"errors"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -14,31 +16,26 @@ func main() {
 	flag.StringVar(&migrationsPath, "migrations-path", "", "path to migration")
 	flag.StringVar(&migrationsTable, "migrations-table", "migrations", "name of migrations table")
 	flag.Parse()
-
 	if storagePath == "" {
 		panic("storage-path required")
 	}
 	if migrationsPath == "" {
 		panic("migrations-path required")
 	}
-
 	migrator, err := migrate.New(
 		"file://"+migrationsPath,
-		fmt.Sprintf("sqlite3://%s?x-migrations-table=%s", storagePath, migrationsPath),
+		fmt.Sprintf("sqlite3://%s?x-migrations-table=%s", storagePath, migrationsTable),
 	)
-
 	if err != nil {
 		panic("migrator initialize err: " + err.Error())
 	}
-
 	if err := migrator.Up(); err != nil {
 		if errors.Is(err, migrate.ErrNoChange) {
 			fmt.Println("No migrations to apply")
+			return
 		}
-		return
 		panic(err)
 	}
-
 	fmt.Println("migrations sucsessfully applied")
 
 }
