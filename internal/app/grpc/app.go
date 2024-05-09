@@ -31,7 +31,7 @@ func (a *App) Run() error {
 	const op = "grpcApp.Run"
 	log := a.logger.With(slog.String("op", op))
 
-	l, err := net.Listen("tcp", fmt.Sprintf("%d", a.port))
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
