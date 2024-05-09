@@ -20,6 +20,7 @@ func NewStorage(storagePath string) (*Storage, error) {
 	const op = "storage.sqlite.New"
 
 	db, err := sql.Open("sqlite3", storagePath)
+	fmt.Println("storage path" + storagePath)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

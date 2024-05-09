@@ -6,6 +6,7 @@ import (
 
 	ssov1 "github.com/Touchme245/sso_protos/gen/go/sso"
 	"github.com/Touchme245/sso_server/internal/services/auth"
+	"github.com/Touchme245/sso_server/internal/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,15 +32,14 @@ func Register(grpServer *grpc.Server, auth AuthService) {
 func (s *serverApi) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.LoginResponse, error) {
 	err := validateLogin(req)
 	if err != nil {
-		if errors.Is(err, auth.ErrInvalidCredentials) {
-			return nil, status.Error(codes.InvalidArgument, "invalid credentials")
-		}
-
 		return nil, err
 	}
 
 	token, err := s.authService.Login(ctx, req.GetEmail(), req.GetPassword(), int(req.GetAppId()))
 	if err != nil {
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid credentials")
+		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	return &ssov1.LoginResponse{
@@ -55,8 +55,9 @@ func (s *serverApi) Register(ctx context.Context, req *ssov1.RegisterRequest) (*
 	userId, err := s.authService.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, auth.ErrUserExists) {
-			return nil, status.Error(codes.InvalidArgument, "user already exists")
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	return &ssov1.RegisterResponse{
@@ -70,6 +71,13 @@ func (s *serverApi) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ss
 	}
 	res, err := s.authService.IsAdmin(ctx, req.GetUserId())
 	if err != nil {
+		if errors.Is(err, storage.ErrAppNotFound) {
+			return nil, status.Error(codes.NotFound, "app not found")
+		}
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	return &ssov1.IsAdminResponse{
