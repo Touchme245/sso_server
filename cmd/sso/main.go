@@ -3,6 +3,8 @@ package main
 import (
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/Touchme245/sso_server/internal/app"
 	"github.com/Touchme245/sso_server/internal/config"
@@ -15,7 +17,18 @@ func main() {
 	logger.Info("starting application", slog.String("env", cfg.Env))
 
 	application := app.NewApp(logger, cfg.Grpc.Port, cfg.StoragePath, cfg.TokenTTL)
-	application.GRPCServ.MustRun()
+	go application.GRPCServ.MustRun()
+
+	stop := make(chan os.Signal, 1)
+
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	<-stop
+
+	application.GRPCServ.Stop()
+
+	logger.Info("application stopped")
+
 }
 
 func setupLogger(env string) *slog.Logger {
