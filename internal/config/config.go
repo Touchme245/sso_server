@@ -26,15 +26,7 @@ func MustLoad() *Config {
 		panic("config path is empty")
 	}
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		panic("config file not found: " + path)
-	}
-
-	var cfg Config
-	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
-		panic("failed to read config")
-	}
-	return &cfg
+	return MustLoadByPAth(path)
 }
 
 func FetchConfigPath() string {
@@ -47,4 +39,17 @@ func FetchConfigPath() string {
 		res = os.Getenv("CONFIG_PATH")
 	}
 	return res
+}
+
+func MustLoadByPAth(path string) *Config {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		panic("config file not found: " + path)
+	}
+
+	var cfg Config
+
+	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
+		panic("cannot read config" + err.Error())
+	}
+	return &cfg
 }
